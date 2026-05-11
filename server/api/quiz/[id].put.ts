@@ -17,6 +17,10 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: "Title and questions are required" });
   }
 
+  if (timeLimit !== undefined && timeLimit !== null && (!Number.isInteger(timeLimit) || timeLimit < 1)) {
+    throw createError({ statusCode: 400, statusMessage: "timeLimit must be a positive integer" });
+  }
+
   const quiz = await Quiz.findByIdAndUpdate(id, { title, timeLimit, questions }, { new: true, runValidators: true });
 
   if (!quiz) {
