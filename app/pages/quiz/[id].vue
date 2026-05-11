@@ -4,6 +4,8 @@
     <a-alert v-else-if="error" type="error" message="Failed to load quiz" show-icon class="mb-4" />
 
     <a-card v-else-if="quiz" :title="quiz.title" class="shadow-sm">
+      <QuizTimer v-if="remainingSeconds !== null" :seconds="remainingSeconds" />
+
       <div v-for="(q, i) in quiz.questions" :key="i" class="mb-8">
         <p class="font-semibold mb-3">{{ i + 1 }}. {{ q.question }}</p>
         <a-radio-group v-model:value="answers[i]" class="flex flex-col gap-2">
@@ -27,14 +29,71 @@ const quiz = computed(() => data.value as any);
 const answers = ref<number[]>([]);
 const submitting = ref(false);
 const studentName = useState<string>("student-name", () => "");
+const remainingSeconds = ref<number | null>(null);
+const hasAutoSubmitted = ref(false);
+let countdownHandle: ReturnType<typeof setInterval> | null = null;
+
+function stopCountdown() {
+  if (countdownHandle) {
+    clearInterval(countdownHandle);
+    countdownHandle = null;
+  }
+}
+
+watch(
+  () => quiz.value?.timeLimit,
+  (timeLimit) => {
+    if (!import.meta.client) return;
+
+    stopCountdown();
+
+    if (!timeLimit) {
+      remainingSeconds.value = null;
+      return;
+    }
+
+    hasAutoSubmitted.value = false;
+    remainingSeconds.value = timeLimit * 60;
+    countdownHandle = setInterval(() => {
+      if (remainingSeconds.value === null) {
+        stopCountdown();
+        return;
+      }
+
+      if (remainingSeconds.value <= 1) {
+        remainingSeconds.value = 0;
+        stopCountdown();
+
+        if (!submitting.value && !hasAutoSubmitted.value) {
+          hasAutoSubmitted.value = true;
+          onSubmit(true);
+        }
+
+        return;
+      }
+
+      remainingSeconds.value -= 1;
+    }, 1000);
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(() => {
+  stopCountdown();
+});
 
 if (!studentName.value) {
   await navigateTo("/");
 }
 
-async function onSubmit() {
-  if (!quiz.value?._id) return;
+async function onSubmit(isAutoSubmit = false) {
+  if (!quiz.value?._id || submitting.value) return;
   submitting.value = true;
+
+  if (isAutoSubmit) {
+    message.info("Time is up. Submitting your quiz.");
+  }
+
   try {
     const result = await submitQuiz(quiz.value._id, answers.value, studentName.value);
     const resultState = useState<any>("quiz-result", () => null);
