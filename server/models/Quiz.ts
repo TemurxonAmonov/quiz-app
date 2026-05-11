@@ -9,6 +9,7 @@ const questionSchema = new mongoose.Schema({
 const quizSchema = new mongoose.Schema(
   {
     title: { type: String, required: true },
+    timeLimit: { type: Number, min: 1 },
     questions: { type: [questionSchema], required: true },
   },
   { timestamps: true },
