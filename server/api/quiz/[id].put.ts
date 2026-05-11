@@ -11,13 +11,13 @@ export default defineEventHandler(async (event) => {
 
   const id = getRouterParam(event, "id");
   const body = await readBody(event);
-  const { title, questions } = body;
+  const { title, timeLimit, questions } = body;
 
   if (!title || !questions || !questions.length) {
     throw createError({ statusCode: 400, statusMessage: "Title and questions are required" });
   }
 
-  const quiz = await Quiz.findByIdAndUpdate(id, { title, questions }, { new: true, runValidators: true });
+  const quiz = await Quiz.findByIdAndUpdate(id, { title, timeLimit, questions }, { new: true, runValidators: true });
 
   if (!quiz) {
     throw createError({ statusCode: 404, statusMessage: "Quiz not found" });

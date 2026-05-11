@@ -10,12 +10,12 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
-  const { title, questions } = body;
+  const { title, timeLimit, questions } = body;
 
   if (!title || !questions || !questions.length) {
     throw createError({ statusCode: 400, statusMessage: "Title and questions are required" });
   }
 
-  const quiz = await Quiz.create({ title, questions });
+  const quiz = await Quiz.create({ title, timeLimit, questions });
   return quiz;
 });
