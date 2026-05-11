@@ -5,6 +5,7 @@
 
     <a-card v-else-if="quiz" :title="quiz.title" class="shadow-sm">
       <QuizTimer v-if="remainingSeconds !== null" :seconds="remainingSeconds" />
+      <a-alert v-else type="info" message="Timer is not set for this quiz" show-icon class="mb-6" />
 
       <div v-for="(q, i) in quiz.questions" :key="i" class="mb-8">
         <p class="font-semibold mb-3">{{ i + 1 }}. {{ q.question }}</p>

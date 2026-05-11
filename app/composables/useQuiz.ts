@@ -18,7 +18,7 @@ export function useQuiz() {
     });
   }
 
-  async function updateQuiz(id: string, payload: { title: string; questions: Array<{ question: string; options: string[]; answer: number }> }) {
+  async function updateQuiz(id: string, payload: { title: string; timeLimit?: number; questions: Array<{ question: string; options: string[]; answer: number }> }) {
     return await $fetch(`/api/quiz/${id}`, {
       method: "PUT",
       body: payload,

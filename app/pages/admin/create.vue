@@ -24,6 +24,10 @@
         <a-input v-model:value="form.title" placeholder="Enter quiz title" />
       </a-form-item>
 
+      <a-form-item label="Time Limit (minutes)">
+        <a-input-number v-model:value="form.timeLimit" :min="1" class="w-full" placeholder="Enter time limit" />
+      </a-form-item>
+
       <div v-for="(q, qIndex) in form.questions" :key="qIndex" class="border rounded-lg p-4 mb-4">
         <a-form-item :label="`Question ${qIndex + 1}`">
           <a-input v-model:value="q.question" placeholder="Question text" />
@@ -80,12 +84,14 @@ const editingId = ref<string | null>(null);
 
 const form = ref({
   title: "",
+  timeLimit: 10,
   questions: [{ question: "", options: ["", "", "", ""], answer: 0 }],
 });
 
 function resetForm() {
   form.value = {
     title: "",
+    timeLimit: 10,
     questions: [{ question: "", options: ["", "", "", ""], answer: 0 }],
   };
 }
@@ -102,6 +108,7 @@ async function openEdit(id: string) {
     editingId.value = id;
     form.value = {
       title: quiz.title,
+      timeLimit: quiz.timeLimit || 10,
       questions: quiz.questions.map((q: any) => ({
         question: q.question,
         options: q.options,
