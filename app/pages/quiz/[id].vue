@@ -30,6 +30,7 @@ const answers = ref<number[]>([]);
 const submitting = ref(false);
 const studentName = useState<string>("student-name", () => "");
 const remainingSeconds = ref<number | null>(null);
+const hasAutoSubmitted = ref(false);
 let countdownHandle: ReturnType<typeof setInterval> | null = null;
 
 function stopCountdown() {
@@ -51,10 +52,23 @@ watch(
       return;
     }
 
+    hasAutoSubmitted.value = false;
     remainingSeconds.value = timeLimit * 60;
     countdownHandle = setInterval(() => {
-      if (remainingSeconds.value === null || remainingSeconds.value <= 0) {
+      if (remainingSeconds.value === null) {
         stopCountdown();
+        return;
+      }
+
+      if (remainingSeconds.value <= 1) {
+        remainingSeconds.value = 0;
+        stopCountdown();
+
+        if (!submitting.value && !hasAutoSubmitted.value) {
+          hasAutoSubmitted.value = true;
+          onSubmit(true);
+        }
+
         return;
       }
 
@@ -72,9 +86,14 @@ if (!studentName.value) {
   await navigateTo("/");
 }
 
-async function onSubmit() {
-  if (!quiz.value?._id) return;
+async function onSubmit(isAutoSubmit = false) {
+  if (!quiz.value?._id || submitting.value) return;
   submitting.value = true;
+
+  if (isAutoSubmit) {
+    message.info("Time is up. Submitting your quiz.");
+  }
+
   try {
     const result = await submitQuiz(quiz.value._id, answers.value, studentName.value);
     const resultState = useState<any>("quiz-result", () => null);
