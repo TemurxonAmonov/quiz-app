@@ -4,6 +4,8 @@
     <a-alert v-else-if="error" type="error" message="Failed to load quiz" show-icon class="mb-4" />
 
     <a-card v-else-if="quiz" :title="quiz.title" class="shadow-sm">
+      <QuizTimer v-if="quiz.timeLimit" :seconds="quiz.timeLimit * 60" />
+
       <div v-for="(q, i) in quiz.questions" :key="i" class="mb-8">
         <p class="font-semibold mb-3">{{ i + 1 }}. {{ q.question }}</p>
         <a-radio-group v-model:value="answers[i]" class="flex flex-col gap-2">
