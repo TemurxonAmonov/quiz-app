@@ -4,7 +4,7 @@
     <a-alert v-else-if="error" type="error" message="Failed to load quiz" show-icon class="mb-4" />
 
     <a-card v-else-if="quiz" :title="quiz.title" class="shadow-sm">
-      <QuizTimer v-if="quiz.timeLimit" :seconds="quiz.timeLimit * 60" />
+      <QuizTimer v-if="remainingSeconds !== null" :seconds="remainingSeconds" />
 
       <div v-for="(q, i) in quiz.questions" :key="i" class="mb-8">
         <p class="font-semibold mb-3">{{ i + 1 }}. {{ q.question }}</p>
@@ -29,6 +29,44 @@ const quiz = computed(() => data.value as any);
 const answers = ref<number[]>([]);
 const submitting = ref(false);
 const studentName = useState<string>("student-name", () => "");
+const remainingSeconds = ref<number | null>(null);
+let countdownHandle: ReturnType<typeof setInterval> | null = null;
+
+function stopCountdown() {
+  if (countdownHandle) {
+    clearInterval(countdownHandle);
+    countdownHandle = null;
+  }
+}
+
+watch(
+  () => quiz.value?.timeLimit,
+  (timeLimit) => {
+    if (!import.meta.client) return;
+
+    stopCountdown();
+
+    if (!timeLimit) {
+      remainingSeconds.value = null;
+      return;
+    }
+
+    remainingSeconds.value = timeLimit * 60;
+    countdownHandle = setInterval(() => {
+      if (remainingSeconds.value === null || remainingSeconds.value <= 0) {
+        stopCountdown();
+        return;
+      }
+
+      remainingSeconds.value -= 1;
+    }, 1000);
+  },
+  { immediate: true },
+);
+
+onBeforeUnmount(() => {
+  stopCountdown();
+});
 
 if (!studentName.value) {
   await navigateTo("/");
